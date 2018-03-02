@@ -26,16 +26,25 @@ class Layout
 		if (!empty($sections) && is_array($sections)) {
 			$cols = array_merge($cols, $sections);
 		}
-		return $cols;
+		$colsWithLabels = [];
+		foreach ($cols as $col) {
+			$colsWithLabels[$col] = (isset($GLOBALS['TL_LANG']['COLS'][$col]) && !is_array($GLOBALS['TL_LANG']['COLS'][$col]))
+				? $GLOBALS['TL_LANG']['COLS'][$col]
+				: $col;
+		}
+		return $colsWithLabels;
 	}
 
 	public function getFallbackMethods(\MultiColumnWizard $mcw) {
+		\System::loadLanguageFile('fallback_articles_methods');
 		$methods = [];
 		if (
 			isset($GLOBALS['TL_HOOKS']['getFallbackArticles'])
 			&& is_array($GLOBALS['TL_HOOKS']['getFallbackArticles'])
 		) {
-			$methods = array_keys($GLOBALS['TL_HOOKS']['getFallbackArticles']);
+			foreach (array_keys($GLOBALS['TL_HOOKS']['getFallbackArticles']) as $key) {
+				$methods[$key] = $GLOBALS['TL_LANG']['fallback_articles_methods'][$key] ?: $key;
+			}
 		}
 		return $methods;
 	}
