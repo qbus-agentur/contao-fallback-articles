@@ -43,7 +43,7 @@ $GLOBALS['TL_DCA']['tl_layout']['fields']['fallbackArticles'] = [
 	'eval'      => [
 		'columnFields' => [
 			'col'      => [
-				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticlesCol'],
+				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticles_col'],
 				'inputType'        => 'select',
 				'options_callback' => [Layout::class, 'getSections'],
 				'eval'             => [
@@ -54,7 +54,7 @@ $GLOBALS['TL_DCA']['tl_layout']['fields']['fallbackArticles'] = [
 				]
 			],
 			'fallback' => [
-				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticlesFallback'],
+				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticles_fallback'],
 				'inputType'        => 'select',
 				'options_callback' => [Layout::class, 'getFallbackMethods'],
 				'eval'             => [
