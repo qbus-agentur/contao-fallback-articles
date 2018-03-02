@@ -1,6 +1,6 @@
 {
     "name": "qbus/contao-fallback-articles",
-    "description": "Fallback Articles Extension for Contao",
+    "description": "A basis for defining methods that can get fallback articles when a page has no articles for a particular layout section.",
     "type": "contao-module",
     "license": "LGPL-3.0+",
     "authors": [
