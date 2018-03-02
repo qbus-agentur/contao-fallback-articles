@@ -45,12 +45,24 @@ $GLOBALS['TL_DCA']['tl_layout']['fields']['fallbackArticles'] = [
 			'col'      => [
 				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticlesCol'],
 				'inputType'        => 'select',
-				'options_callback' => [Layout::class, 'getSections']
+				'options_callback' => [Layout::class, 'getSections'],
+				'eval'             => [
+					// MultiColumnWizard doesn't set tl_select_column class
+					'style'  => 'width: 140px;',
+					// see https://github.com/menatwork/MultiColumnWizard/issues/188
+					'chosen' => true
+				]
 			],
 			'fallback' => [
 				'label'            => &$GLOBALS['TL_LANG']['tl_layout']['fallbackArticlesFallback'],
 				'inputType'        => 'select',
-				'options_callback' => [Layout::class, 'getFallbackMethods']
+				'options_callback' => [Layout::class, 'getFallbackMethods'],
+				'eval'             => [
+					// MultiColumnWizard doesn't set tl_select_column class
+					'style'  => 'width: 140px;',
+					// see https://github.com/menatwork/MultiColumnWizard/issues/188
+					'chosen' => true
+				]
 			]
 		]
 	],
