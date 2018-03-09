@@ -22,7 +22,18 @@ class Layout
 	 */
 	public function getSections(\MultiColumnWizard $mcw) {
 		$cols = ['header', 'left', 'right', 'main', 'footer'];
-		$sections = trimsplit(',', $mcw->activeRecord->sections);
+		$sectionsTable = deserialize($mcw->activeRecord->sections);
+		$sections = [];
+		if (is_array($sectionsTable)) {
+			// 4.4 format
+			foreach ($sectionsTable as $sectionRow) {
+				$sections[] = $sectionRow['id'];
+			}
+		}
+		else {
+			// 3.5 format
+			$sections = trimsplit(',', $mcw->activeRecord->sections);
+		}
 		if (!empty($sections) && is_array($sections)) {
 			$cols = array_merge($cols, $sections);
 		}
@@ -50,4 +61,3 @@ class Layout
 	}
 
 }
-
