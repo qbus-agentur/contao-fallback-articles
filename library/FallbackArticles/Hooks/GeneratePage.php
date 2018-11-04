@@ -52,12 +52,7 @@ class GeneratePage extends \System
 			) {
 				$callback = $GLOBALS['TL_HOOKS']['getFallbackArticles'][$fallbackMethod];
 				$fallbackArticles = static::importStatic($callback[0])->{$callback[1]}($objPage->id, $col);
-				if (in_array($col, $this->defaultSections)) {
-					$objPageRegular->Template->$col = $fallbackArticles;
-				}
-				else {
-					$objPageRegular->Template->sections[$col] = $fallbackArticles;
-				}
+				$this->insertFallbackArticles($objLayout, $objPageRegular, $col, $fallbackArticles);
 			}
 		}
 	}
@@ -84,6 +79,88 @@ class GeneratePage extends \System
 		}
 
 		return false;
+	}
+
+	protected function insertFallbackArticles($objLayout, $objPageRegular, $col, $fallbackArticles) {
+		// Replicate most of the core's module assembly because the generatePage
+		// hook is too late.
+		// TODO: Drop 3.5 support and use getArticles hook
+
+		// Initialize modules and sections
+		$arrCustomSections = array();
+		$arrSections = $this->defaultSections;
+		$arrModules = deserialize($objLayout->modules);
+
+		$arrModuleIds = array();
+
+		// Reset sections so that content is not doubled
+		foreach ($arrSections as $section) {
+			$objPageRegular->Template->$section = '';
+		}
+
+		// Filter the disabled modules
+		foreach ($arrModules as $module) {
+			if ($module['enable']) {
+				$arrModuleIds[] = $module['mod'];
+			}
+		}
+
+		// Get all modules in a single DB query
+		$objModules = \ModuleModel::findMultipleByIds($arrModuleIds);
+
+		if ($objModules !== null || $arrModules[0]['mod'] == 0) { // see #4137
+			$arrMapper = array();
+
+			// Create a mapper array in case a module is included more than once (see #4849)
+			if ($objModules !== null) {
+				while ($objModules->next()) {
+					$arrMapper[$objModules->id] = $objModules->current();
+				}
+			}
+
+			foreach ($arrModules as $arrModule) {
+				// Disabled module
+				if (!$arrModule['enable']) {
+					continue;
+				}
+
+				// Replace the module ID with the module model
+				if ($arrModule['mod'] > 0 && isset($arrMapper[$arrModule['mod']])) {
+					$arrModule['mod'] = $arrMapper[$arrModule['mod']];
+				}
+
+				// 0 means article
+				$addFallback = ($arrModule['mod'] == 0 && $arrModule['col'] === $col);
+
+				// Generate the modules
+				if (in_array($arrModule['col'], $arrSections)) {
+					// Filter active sections (see #3273)
+					if ($arrModule['col'] == 'header' && $objLayout->rows != '2rwh' && $objLayout->rows != '3rw') {
+						continue;
+					}
+					if ($arrModule['col'] == 'left' && $objLayout->cols != '2cll' && $objLayout->cols != '3cl') {
+						continue;
+					}
+					if ($arrModule['col'] == 'right' && $objLayout->cols != '2clr' && $objLayout->cols != '3cl') {
+						continue;
+					}
+					if ($arrModule['col'] == 'footer' && $objLayout->rows != '2rwf' && $objLayout->rows != '3rw') {
+						continue;
+					}
+
+					$objPageRegular->Template->{$arrModule['col']} .= $addFallback
+						? $fallbackArticles
+						: \Controller::getFrontendModule($arrModule['mod'], $arrModule['col']);
+				}
+				else {
+					$arrCustomSections[$arrModule['col']] .= $addFallback
+						? $fallbackArticles
+						: \Controller::getFrontendModule($arrModule['mod'], $arrModule['col']);
+				}
+			}
+		}
+
+		$objPageRegular->Template->sections = $arrCustomSections;
 	}
 
 }
