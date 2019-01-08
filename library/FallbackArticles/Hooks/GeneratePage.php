@@ -35,12 +35,18 @@ class GeneratePage extends \System
 			return;
 		}
 
+		// Backwards compatibility. Before the introduction of $fallbackInCol,
+		// all fallback methods were checked and the last one won. To still
+		// produce the same output, reverse the order of the configured methods.
+		// TODO: Drop in next major version.
+		$fallbackConfTable = array_reverse($fallbackConfTable);
+		$fallbackInCol = [];
 		foreach ($fallbackConfTable as $fallbackConf) {
 			$blnFallbackNeeded = false;
 			$col = $fallbackConf['col'];
 
 			$blnFallbackNeeded = $this->isFallbackNeeded($col, $objPageRegular);
-			if (!$blnFallbackNeeded) {
+			if (!$blnFallbackNeeded || (isset($fallbackInCol[$col]) && $fallbackInCol[$col])) {
 				continue;
 			}
 
@@ -53,6 +59,8 @@ class GeneratePage extends \System
 				$callback = $GLOBALS['TL_HOOKS']['getFallbackArticles'][$fallbackMethod];
 				$fallbackArticles = static::importStatic($callback[0])->{$callback[1]}($objPage->id, $col);
 				$this->insertFallbackArticles($objLayout, $objPageRegular, $col, $fallbackArticles);
+				// Check for false because an article might be an empty string
+				$fallbackInCol[$col] = ($fallbackArticles !== false);
 			}
 		}
 	}
