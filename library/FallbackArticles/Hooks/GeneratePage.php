@@ -101,11 +101,6 @@ class GeneratePage extends \System
 
 		$arrModuleIds = array();
 
-		// Reset sections so that content is not doubled
-		foreach ($arrSections as $section) {
-			$objPageRegular->Template->$section = '';
-		}
-
 		// Filter the disabled modules
 		foreach ($arrModules as $module) {
 			if ($module['enable']) {
