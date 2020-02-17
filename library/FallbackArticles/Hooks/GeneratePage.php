@@ -57,12 +57,12 @@ class GeneratePage extends \System
 				&& is_array($GLOBALS['TL_HOOKS']['getFallbackArticles'][$fallbackMethod])
 			) {
 				$callback = $GLOBALS['TL_HOOKS']['getFallbackArticles'][$fallbackMethod];
-				$fallbackArticles = static::importStatic($callback[0])->{$callback[1]}($objPage->id, $col);
-				$this->insertFallbackArticles($objLayout, $objPageRegular, $col, $fallbackArticles);
+				$fallbackArticles[$col] = static::importStatic($callback[0])->{$callback[1]}($objPage->id, $col);
 				// Check for false because an article might be an empty string
-				$fallbackInCol[$col] = ($fallbackArticles !== false);
+				$fallbackInCol[$col] = ($fallbackArticles[$col] !== false);
 			}
 		}
+		$this->insertFallbackArticles($objLayout, $objPageRegular, $fallbackArticles);
 	}
 
 	/*
@@ -89,7 +89,7 @@ class GeneratePage extends \System
 		return false;
 	}
 
-	protected function insertFallbackArticles($objLayout, $objPageRegular, $col, $fallbackArticles) {
+	protected function insertFallbackArticles($objLayout, $objPageRegular, $fallbackArticles) {
 		// Replicate most of the core's module assembly because the generatePage
 		// hook is too late.
 		// TODO: Drop 3.5 support and use getArticles hook
@@ -133,7 +133,7 @@ class GeneratePage extends \System
 				}
 
 				// 0 means article
-				$addFallback = ($arrModule['mod'] == 0 && $arrModule['col'] === $col);
+				$addFallback = ($arrModule['mod'] == 0 && $fallbackArticles[$arrModule['col']]);
 
 				// Generate the modules
 				if (in_array($arrModule['col'], $arrSections)) {
@@ -151,13 +151,15 @@ class GeneratePage extends \System
 						continue;
 					}
 
-					$objPageRegular->Template->{$arrModule['col']} .= $addFallback
-						? $fallbackArticles
-						: \Controller::getFrontendModule($arrModule['mod'], $arrModule['col']);
+					if ($this->isFallbackNeeded($arrModule['col'], $objPageRegular)) {
+						$objPageRegular->Template->{$arrModule['col']} .= $addFallback
+							? $fallbackArticles[$arrModule['col']]
+							: \Controller::getFrontendModule($arrModule['mod'], $arrModule['col']);
+					}
 				}
 				else {
 					$arrCustomSections[$arrModule['col']] .= $addFallback
-						? $fallbackArticles
+						? $fallbackArticles[$arrModule['col']]
 						: \Controller::getFrontendModule($arrModule['mod'], $arrModule['col']);
 				}
 			}
